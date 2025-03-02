@@ -1,22 +1,20 @@
+#!/usr/bin/env python3
 import sys
+import math
+from collections import deque, defaultdict, Counter
+from itertools import combinations, permutations, accumulate, product
 
-def inp():
-    return sys.stdin.readline().strip()
-def inplist():
-    return list(map(int, inp().split()))
-
-def debug(*args):
-    print("DEBUG:", *args, file=sys.stderr)
+def input():
+    return sys.stdin.readline().rstrip('\n')
 
 def solve():
-    # Your code here
+    # Write your code here
     pass
 
 def main():
-    t = 1
-    t = int(inp())
+    t = int(input())
     for _ in range(t):
         solve()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
