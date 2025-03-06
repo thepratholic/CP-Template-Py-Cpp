@@ -1,20 +1,172 @@
-#!/usr/bin/env python3
-import sys
-import math
-from collections import deque, defaultdict, Counter
-from itertools import combinations, permutations, accumulate, product
+import sys, random, math, string, itertools
+from copy import deepcopy
+from collections import defaultdict, Counter, deque
+from heapq import heapify, heappush, heappop
+from functools import cache
+from bisect import bisect_left, bisect_right
+from types import GeneratorType
+from typing import *
 
-def input():
-    return sys.stdin.readline().rstrip('\n')
+input = lambda: sys.stdin.readline().strip()
 
-def solve():
-    # Write your code here
+
+def debug(*x, **y):
+    if not DEBUG_ENABLED:
+        return
+    print(*x, (y if y != {} else "\b"), file=sys.stderr)
+
+
+###############################################################################
+
+class UnionFind:
+    def __init__(self, n):
+        self.n = n
+        self.parents = list(range(n))
+        self.count = [1] * n
+        self.sets_count = n
+
+    def find(self, x):
+        x_copy = x
+        while self.parents[x] != x:
+            x = self.parents[x]
+        while x_copy != x:
+            x_copy, self.parents[x_copy] = self.parents[x_copy], x
+        return x
+
+    def union(self, x, y):
+        x, y = self.find(x), self.find(y)
+        if x != y:
+            if self.count[x] < self.count[y]:
+                x, y = y, x
+            self.parents[y] = x
+            self.count[x] += self.count[y]
+            self.sets_count -= 1
+
+def solve_bruteforce(case=None):
     pass
 
-def main():
-    t = int(input())
-    for _ in range(t):
-        solve()
 
-if __name__ == '__main__':
-    main()
+def execute_once():
+    pass
+
+
+def solve(case=None):
+    pass
+    
+
+
+INPUT_NUMBER_OF_TEST_CASES = 1
+SKIP_SOLVE = 0
+DEBUG_ENABLED = 0
+BOOLEAN_RETURN = 0
+MOD = 10**9 + 7
+TRUE_MAPPING, FALSE_MAPPING = "YES", "NO"
+
+###############################################################################
+
+
+class CustomHashMap:
+    def __init__(self, map_type=dict, arg=None):
+        """
+        Custom HashMap for Python's Anti-hash-table test
+        :param map_type: type of the map (allowed types: dict, defaultdict, Counter)
+        :param arg: argument for the map (should be list if map_type is Counter and function if map_type is defaultdict)
+        """
+        self.RANDOM = random.randrange(2**62)
+        if map_type == Counter:
+            self.dict = map_type([self.wrapper(i) for i in arg])
+        elif map_type == defaultdict:
+            self.dict = map_type(arg)
+        else:
+            self.dict = map_type()
+
+    def wrapper(self, num):
+        return num ^ self.RANDOM
+
+    def __setitem__(self, key, value):
+        self.dict[self.wrapper(key)] = value
+
+    def __getitem__(self, key):
+        return self.dict[self.wrapper(key)]
+
+    def __contains__(self, key):
+        return self.wrapper(key) in self.dict
+
+    def __iter__(self):
+        return iter(self.wrapper(i) for i in self.dict)
+
+    def keys(self):
+        return [self.wrapper(i) for i in self.dict]
+
+    def values(self):
+        return [i for i in self.dict.values()]
+
+    def items(self):
+        return [(self.wrapper(i), j) for i, j in self.dict.items()]
+
+    def __repr__(self):
+        return repr({self.wrapper(i): j for i, j in self.dict.items()})
+
+
+def recursion_limit_fix(f):
+    """
+    recursion limit fix decorator, change 'return' to 'yield' and add 'yield' before calling the function
+    and add 'yield' after the function if not returning anything
+    """
+    stack = []
+
+    def wrappedfunc(*args, **kwargs):
+        if stack:
+            return f(*args, **kwargs)
+        else:
+            to = f(*args, **kwargs)
+            while True:
+                if type(to) is GeneratorType:
+                    stack.append(to)
+                    to = next(to)
+                else:
+                    stack.pop()
+                    if not stack:
+                        break
+                    to = stack[-1].send(to)
+            return to
+
+    return wrappedfunc
+
+
+def binary_search(left, right, check, start_from_left):
+    if start_from_left:
+        ans = left
+    else:
+        ans = right
+    while left <= right:
+        mid = (left + right) // 2
+        if start_from_left:
+            if check(mid):
+                ans, left = mid, mid + 1
+            else:
+                right = mid - 1
+        else:
+            if check(mid):
+                ans, right = mid, mid - 1
+            else:
+                left = mid + 1
+    return ans
+
+
+def set(arr):
+    arr.sort()
+    sett = []
+    for i in arr:
+        if not sett or sett[-1]!=i:
+            sett.append(i)
+    return sett
+
+execute_once()
+
+if not SKIP_SOLVE:
+    for t in range(int(input()) if INPUT_NUMBER_OF_TEST_CASES else 1):
+        if BOOLEAN_RETURN:
+            print(TRUE_MAPPING if solve(t + 1) else FALSE_MAPPING)
+        else:
+            solve(t + 1)
