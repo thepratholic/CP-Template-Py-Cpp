@@ -1,172 +1,293 @@
-import sys, random, math, string, itertools
-from copy import deepcopy
-from collections import defaultdict, Counter, deque
-from heapq import heapify, heappush, heappop
-from functools import cache
-from bisect import bisect_left, bisect_right
-from types import GeneratorType
-from typing import *
+from collections import Counter,deque
+from collections import defaultdict
+import math
+import  bisect
+import heapq
+import itertools 
+import sys
+import string
+from fractions import Fraction
+    
+def pollard_rho(n):
+    
+    if n & 1 == 0:
+        return 2
+    if n % 3 == 0:
+        return 3
+ 
+    s = ((n - 1) & (1 - n)).bit_length() - 1
+    d = n >> s
+    for a in [2, 325, 9375, 28178, 450775, 9780504, 1795265022]:
+        p = pow(a, d, n)
+        if p == 1 or p == n - 1 or a % n == 0:
+            continue
+        for _ in range(s):
+            prev = p
+            p = (p * p) % n
+            if p == 1:
+                return math.gcd(prev - 1, n)
+            if p == n - 1:
+                break
+        else:
+            for i in range(2, n):
+                x, y = i, (i * i + 1) % n
+                f = math.gcd(abs(x - y), n)
+                while f == 1:
+                    x, y = (x * x + 1) % n, (y * y + 1) % n
+                    y = (y * y + 1) % n
+                    f = math.gcd(abs(x - y), n)
+                if f != n:
+                    return f
+    return n
+ 
+ 
+ 
+def prime_factors(n):
+    
+    if n <= 1:
+        return Counter()
+    f = pollard_rho(n)
+    return Counter([n]) if f == n else prime_factors(f) + prime_factors(n // f)
+                
+def modexp(a, b, m):
+    a %= m
+    res = 1
+    while b > 0:
+        if b & 1:
+            res = res * a % m
+        a = a * a % m
+        b >>= 1
+    return res 
+ 
+def gp(k, n):
+    
+    res = (1/k) * (1 - (1/k)**n) / (1 - 1/k)
+    return res
+ 
+def binpow(a,b):
+    res = 1
+    while b > 0:
+        if b & 1:
+            res *= a
+        a *= a
+        b >>= 1
+    return res
+ 
+def phi(n):
+    res=n
+    i=2
+    while i*i<=n:
+        if n%i==0:
+            while n%i==0:
+                n/=i
+            res-=res/i
+        i+=1
+    if n>1:
+        res-=res/n
+        
+    return int(res)
+            
+def ttt(x):
+    d=[]
+    for i in range(1,int(math.sqrt(x))+1):
+        if x%i==0:
+            d.append(i)
+            if x//i!=i:
+                d.append(x//i)
+    return d
 
-input = lambda: sys.stdin.readline().strip()
+def lcm(a,b):
+   return a*b//math.gcd(a,b)
+ 
+def psum(a):
+    psum = [0]
+    for i in a:
+        psum.append(psum[-1] + i)
+    return psum
+ 
+def sos(x):
+    s=str(x)
+    res=[int(s[i]) for i in range(len(s))]
+    return sum(res)
 
+def ar(a,n):
+    d=a[1]-a[0]
+    for i in range(1,n-1):
+        if d!=a[i+1]-a[i]:
+            return False
+    return True
 
-def debug(*x, **y):
-    if not DEBUG_ENABLED:
-        return
-    print(*x, (y if y != {} else "\b"), file=sys.stderr)
+def pref_suff_gcd(a,n):
+    a=[0]+a
+    pref=[0]*(n+2)
+    suff=[0]*(n+2)
+    for i in range(1,n+1):
+        pref[i]=math.gcd(pref[i-1],a[i])
+    for i in range(n,0,-1):
+        suff[i]=math.gcd(suff[i+1],a[i])
+    return pref,suff
+def binomial(n,k):
+    dp = [[0] * (k + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = 1
+        if i <= k:
+            dp[i][i] = 1
+    for i in range(n + 1):
+        for j in range(1, min(i, k) + 1):
+            if i != j:
+                dp[i][j] = (dp[i - 1][j - 1] + dp[i - 1][j])
 
+    return dp[n][k] 
 
-###############################################################################
+def bisectll(v, x):
+    l, r = -1, len(v)
+    while r > l + 1:
+        m = (l + r) // 2
+        if v[m] > x:
+            r = m
+        else:
+            l = m
+    return l
 
-class UnionFind:
-    def __init__(self, n):
-        self.n = n
-        self.parents = list(range(n))
-        self.count = [1] * n
-        self.sets_count = n
+def bisectrr(v, x):
+    l, r = -1, len(v)
+    while r > l + 1:
+        m = (l + r) // 2
+        if v[m] < x:
+            l = m
+        else:
+            r = m
+    return r
 
-    def find(self, x):
-        x_copy = x
-        while self.parents[x] != x:
-            x = self.parents[x]
-        while x_copy != x:
-            x_copy, self.parents[x_copy] = self.parents[x_copy], x
-        return x
+def connected(v,n):
+    reach = [False] * n
+    que = deque()
+    reach[0] = True
+    que.append(0)
+    while que:
+        u = que.popleft()
+        for e in v[u]:
+            if not reach[e]:
+                reach[e] = True
+                que.append(e)
 
-    def union(self, x, y):
-        x, y = self.find(x), self.find(y)
-        if x != y:
-            if self.count[x] < self.count[y]:
-                x, y = y, x
-            self.parents[y] = x
-            self.count[x] += self.count[y]
-            self.sets_count -= 1
+    for i in range(n):
+        if not reach[i]:
+            return False
+    return True
 
-def solve_bruteforce(case=None):
-    pass
+def cycle(node,vis,rec,v):
+    vis[node]=True
+    rec[node]=True
+    for e in v[node]:
+        if not vis[e]:
+            if cycle(e,vis,rec,v):
+                return True
+        elif rec[e]:
+            return True
+    rec[node]=False
+    return False
+def bipartite(v):
+    graph = defaultdict(list)
 
+    for i in range(len(v)):
+        x1, y1 = v[i]
+        for j in range(i + 1, len(v)):
+            x2, y2 = v[j]
+            if x1 == x2 or y1 == y2:
+                graph[i].append(j)
+                graph[j].append(i)
+    return graph
 
-def execute_once():
-    pass
-
-
-def solve(case=None):
-    pass
+def cyclic(v,n):
+    rec=[False]*n
+    vis=[False]*n
+    for i in range(n):
+        if not vis[i]:
+            if cycle(i,vis,rec,v):
+                return True
+    return False
     
 
-
-INPUT_NUMBER_OF_TEST_CASES = 1
-SKIP_SOLVE = 0
-DEBUG_ENABLED = 0
-BOOLEAN_RETURN = 0
-MOD = 10**9 + 7
-TRUE_MAPPING, FALSE_MAPPING = "YES", "NO"
-
-###############################################################################
-
-
-class CustomHashMap:
-    def __init__(self, map_type=dict, arg=None):
-        """
-        Custom HashMap for Python's Anti-hash-table test
-        :param map_type: type of the map (allowed types: dict, defaultdict, Counter)
-        :param arg: argument for the map (should be list if map_type is Counter and function if map_type is defaultdict)
-        """
-        self.RANDOM = random.randrange(2**62)
-        if map_type == Counter:
-            self.dict = map_type([self.wrapper(i) for i in arg])
-        elif map_type == defaultdict:
-            self.dict = map_type(arg)
-        else:
-            self.dict = map_type()
-
-    def wrapper(self, num):
-        return num ^ self.RANDOM
-
-    def __setitem__(self, key, value):
-        self.dict[self.wrapper(key)] = value
-
-    def __getitem__(self, key):
-        return self.dict[self.wrapper(key)]
-
-    def __contains__(self, key):
-        return self.wrapper(key) in self.dict
-
-    def __iter__(self):
-        return iter(self.wrapper(i) for i in self.dict)
-
-    def keys(self):
-        return [self.wrapper(i) for i in self.dict]
-
-    def values(self):
-        return [i for i in self.dict.values()]
-
-    def items(self):
-        return [(self.wrapper(i), j) for i, j in self.dict.items()]
-
-    def __repr__(self):
-        return repr({self.wrapper(i): j for i, j in self.dict.items()})
+def dfds(s):
+    stack=[s]
+    ver=1
+    e=0
+    while stack:
+        x=stack.pop()
+        vis[x]=True
+        for i in v[x]:
+            e+=1
+            if not vis[i]:
+                ver+=1
+                vis[i]=True
+                stack.append(i)
+    return e==ver
 
 
-def recursion_limit_fix(f):
-    """
-    recursion limit fix decorator, change 'return' to 'yield' and add 'yield' before calling the function
-    and add 'yield' after the function if not returning anything
-    """
-    stack = []
 
-    def wrappedfunc(*args, **kwargs):
-        if stack:
-            return f(*args, **kwargs)
-        else:
-            to = f(*args, **kwargs)
-            while True:
-                if type(to) is GeneratorType:
-                    stack.append(to)
-                    to = next(to)
-                else:
-                    stack.pop()
-                    if not stack:
-                        break
-                    to = stack[-1].send(to)
-            return to
+def mss(arr):
+    max_sum = float('-inf')
+    curr_sum = 0
 
-    return wrappedfunc
+    for num in arr:
+        curr_sum = max(num, curr_sum + num)
+        max_sum = max(max_sum, curr_sum)
+
+    return max_sum
+
+def lss(arr):
+    min_sum = float('inf')
+    curr_sum = 0
+
+    for num in arr:
+        curr_sum = min(num, curr_sum + num)
+        min_sum = min(min_sum, curr_sum)
+
+    return min_sum
 
 
-def binary_search(left, right, check, start_from_left):
-    if start_from_left:
-        ans = left
-    else:
-        ans = right
-    while left <= right:
-        mid = (left + right) // 2
-        if start_from_left:
-            if check(mid):
-                ans, left = mid, mid + 1
-            else:
-                right = mid - 1
-        else:
-            if check(mid):
-                ans, right = mid, mid - 1
-            else:
-                left = mid + 1
-    return ans
+
+def sieve(n):
+    p=[]
+    prime=[True]*(n+1)
+    i=2
+    while i*i<=n:
+        if prime[i]:
+            for j in range(i*i,n+1,i):
+                prime[j]=False
+        i+=1
+    j=1
+    for e in range(2,n+1):
+        if prime[e]:
+            p.append(e)
+    return p
 
 
-def set(arr):
-    arr.sort()
-    sett = []
-    for i in arr:
-        if not sett or sett[-1]!=i:
-            sett.append(i)
-    return sett
+def dsu_find(a):
+    if parent[a] == a:
+        return a
+    leader=dsu_find(parent[a])
+    parent[a]=leader
+    return leader
 
-execute_once()
+def dsu_union(a, b):
+    leader_a = dsu_find(a)
+    leader_b = dsu_find(b)
+    if leader_a != leader_b:
+        if size[leader_a] < size[leader_b]:
+            leader_a, leader_b = leader_b, leader_a
+        parent[leader_b] = leader_a
+        size[leader_a] += size[leader_b]
 
-if not SKIP_SOLVE:
-    for t in range(int(input()) if INPUT_NUMBER_OF_TEST_CASES else 1):
-        if BOOLEAN_RETURN:
-            print(TRUE_MAPPING if solve(t + 1) else FALSE_MAPPING)
-        else:
-            solve(t + 1)
+
+
+
+
+                
+                
+       
+
+
+
+
