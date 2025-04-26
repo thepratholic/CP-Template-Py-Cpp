@@ -67,6 +67,7 @@ def solve():
     pass
 
 def main():
-    solve()
+    for _ in range(I()):
+        solve()
 
 main()
