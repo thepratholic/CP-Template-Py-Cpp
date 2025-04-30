@@ -1,6 +1,6 @@
 import sys, io, os
 import math
-import bisect
+from bisect import bisect_left, bisect_right
 import heapq
 import string
 import re
