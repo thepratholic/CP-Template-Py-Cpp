@@ -93,7 +93,7 @@
             "#Graph1(dnc,bl): graphadv, Graph2(khn,sat): 2sat, Graph3(fltn,bprt): graphflatten, Graph4(ep,tp,fw,bmf): graphoth",
             "#Graph5(djik,bfs,dfs): graph, Graph6(dfsin): dfsin, utils: utils, Persistent DSU: perdsu, Merge Sort Tree: sorttree",
             "#2-D BIT: 2DBIT",
-            "#Template : https://github.com/OmAmar106/Template-for-Competetive-Programming",
+            "#Template : https://github.com/thepratholic/CP-Template-Py-Cpp",
             "# input_file = open(r'input.txt', 'r');sys.stdin = input_file",
             "",
             "def solve():",

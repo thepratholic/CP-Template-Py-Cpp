@@ -44,7 +44,7 @@
             "// binary indexed tree: BIT, Segment Tree(point updates): SegmentPoint, Convex Hull: hull, Trie/Treap: Tries",
             "// Combinatorics: pnc, Diophantine Equations: dpheq, Graphs: graphs, DSU: DSU, Geometry: Geometry, FFT: fft",
             "// Persistent Segment Tree: perseg, FreqGraphs: bgraph",
-            "// Template : https://github.com/OmAmar106/Template-for-Competetive-Programming",
+            "// Template : https://github.com/thepratholic/CP-Template-Py-Cpp",
 			"",
             "void solve() {",
             "\tint n; cin >> n;",
